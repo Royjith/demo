@@ -4,6 +4,7 @@ import time
 from langchain_cohere import ChatCohere
 
 
+
 st.title("Cohere Chat Bot - v14")
 
 # Initialize chat history
