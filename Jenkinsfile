@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'my-app'               // Docker image name
-        DOCKER_TAG = 'latest-v15'                 // Docker tag
+        DOCKER_TAG = 'latest-v16'                 // Docker tag
         DOCKER_HUB_REPO = 'royjith/pikube'    // Docker Hub repository
         DOCKER_HUB_CREDENTIALS_ID = 'dockerhub'  // Docker Hub credentials ID
         KUBE_CONFIG = '/tmp/kubeconfig'  // Path to the kubeconfig file or use Jenkins Kubernetes plugin credentials
@@ -23,7 +23,7 @@ pipeline {
             steps {
                 script {
                     // Set default tag to 'latest' if DOCKER_TAG is not defined
-                    def tag = "${DOCKER_TAG ?: 'latest-v15'}"
+                    def tag = "${DOCKER_TAG ?: 'latest-v16'}"
                     echo "Building Docker image with tag: ${tag}..."
                     // Build the Docker image with the determined tag
                     def buildResult = sh(script: "docker build -t ${DOCKER_HUB_REPO}:${tag} .", returnStatus: true)
@@ -78,9 +78,9 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            when {
-                branch 'main'  // Only deploy on the 'main' branch
-            }
+           // when {
+          //     branch 'main'  // Only deploy on the 'main' branch
+          // }
             steps {
                 input message: 'Approve Kubernetes Deployment?', ok: 'Deploy'  // Manual approval before deployment
                 script {
