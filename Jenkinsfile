@@ -78,9 +78,9 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            when {
-                branch 'main'  // Only deploy on the 'main' branch
-            }
+           // when {
+          //     branch 'main'  // Only deploy on the 'main' branch
+          // }
             steps {
                 input message: 'Approve Kubernetes Deployment?', ok: 'Deploy'  // Manual approval before deployment
                 script {
