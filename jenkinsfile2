@@ -8,14 +8,15 @@ pipeline {
         DOCKER_HUB_CREDENTIALS_ID = 'dockerhub'  // Docker Hub credentials ID
         DEPLOYMENT_NAME = 'pipeline-deployment'
         NAMESPACE = 'default'  // Kubernetes namespace to deploy to
-        TERRAFORM_DIR = 'main.tf'  // Directory where your Terraform code is located
+        TERRAFORM_DIR = '.'  // Use the current directory as it will be where the 'main.tf' is located after checkout
     }
 
     stages {
         stage('Checkout') {
             steps {
                 echo 'Checking out code from Git...'
-                git branch: 'main', credentialsId: 'dockerhub', url: 'https://github.com/Royjith/docker.git'
+                // Checkout the code from the 'master' branch
+                git branch: 'master', credentialsId: 'dockerhub', url: 'https://github.com/Royjith/docker.git'
             }
         }
 
@@ -86,8 +87,9 @@ pipeline {
                     try {
                         // Set up Terraform credentials (ensure you have the necessary credentials in Jenkins)
                         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-id']]) {
-                            // Navigate to the Terraform directory
-                            dir(TERRAFORM_DIR) {
+                            // Initialize Terraform and apply the configuration from the 'main.tf' file in the checked-out repository
+                            // Navigate to the directory where 'main.tf' is located (current directory after checkout)
+                            dir('.') {
                                 // Initialize Terraform
                                 sh 'terraform init'
 
