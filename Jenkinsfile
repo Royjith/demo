@@ -1,14 +1,14 @@
 pipeline {
-     agent { label 'node-1' } // Set the agent to use node-1
+    agent { label 'node-1' } // Set the agent to use node-1
 
     environment {
         DOCKER_IMAGE = 'my-app'               // Docker image name
-        DOCKER_TAG = 'latest-v16'                 // Docker tag
-        DOCKER_HUB_REPO = 'royjith/pikube'    // Docker Hub repository
+        DOCKER_TAG = 'latest-v014'            // Docker tag
+        DOCKER_HUB_REPO = 'royjith/pikube'   // Docker Hub repository
         DOCKER_HUB_CREDENTIALS_ID = 'dockerhub'  // Docker Hub credentials ID
-        KUBE_CONFIG = '/tmp/kubeconfig'  // Path to the kubeconfig file or use Jenkins Kubernetes plugin credentials
         DEPLOYMENT_NAME = 'pipeline-deployment'
         NAMESPACE = 'default'  // Kubernetes namespace to deploy to
+        TERRAFORM_DIR = 'main.tf'  // Directory where your Terraform code is located
     }
 
     stages {
@@ -23,7 +23,7 @@ pipeline {
             steps {
                 script {
                     // Set default tag to 'latest' if DOCKER_TAG is not defined
-                    def tag = "${DOCKER_TAG ?: 'latest-v16'}"
+                    def tag = "${DOCKER_TAG ?: 'latest-v014'}"
                     echo "Building Docker image with tag: ${tag}..."
                     // Build the Docker image with the determined tag
                     def buildResult = sh(script: "docker build -t ${DOCKER_HUB_REPO}:${tag} .", returnStatus: true)
@@ -77,40 +77,26 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
-           // when {
-          //     branch 'main'  // Only deploy on the 'main' branch
-          // }
+        stage('Run Terraform for EC2 and Docker Setup') {
             steps {
-                input message: 'Approve Kubernetes Deployment?', ok: 'Deploy'  // Manual approval before deployment
+                input message: 'Approve Terraform Execution?', ok: 'Deploy'  // Manual approval before running Terraform
                 script {
-                    echo 'Deploying Docker image to Kubernetes...'
+                    echo 'Running Terraform to launch EC2 instance and set up Docker...'
 
                     try {
-                        // Set the kubeconfig file (for accessing the Kubernetes cluster)
-                        withCredentials([file(credentialsId: 'pikube', variable: 'KUBECONFIG_FILE')]) {
+                        // Set up Terraform credentials (ensure you have the necessary credentials in Jenkins)
+                        withCredentials([file(credentialsId: 'aws-credentials', variable: 'AWS_CREDENTIALS')]) {
+                            // Navigate to the Terraform directory
+                            dir(TERRAFORM_DIR) {
+                                // Initialize Terraform
+                                sh 'terraform init'
 
-                            // Define the path to your deployment.yaml file in the repository
-                            def deploymentFile = 'deployment.yaml'  // Adjust path if necessary
-
-                            // Verify if the deployment.yaml exists in the workspace
-                            sh 'ls -al ${deploymentFile}'
-
-                            // Update the Docker image in the deployment.yaml with the newly pushed image tag
-                            echo "Updating Docker image in the deployment.yaml to ${DOCKER_HUB_REPO}:${DOCKER_TAG}"
-                            sh """
-                                sed -i 's|image: .*|image: ${DOCKER_HUB_REPO}:${DOCKER_TAG}|g' ${deploymentFile}
-                            """
-
-                            // Apply the updated deployment.yaml using kubectl
-                            echo 'Applying the updated deployment.yaml to the Kubernetes cluster...'
-                            sh """
-                                export KUBECONFIG=$KUBECONFIG_FILE
-                                kubectl apply -f ${deploymentFile} --namespace=${NAMESPACE}
-                            """
+                                // Apply Terraform configuration to create EC2 instance and set up Docker
+                                sh 'terraform apply -auto-approve'
+                            }
                         }
                     } catch (Exception e) {
-                        error "Kubernetes deployment failed: ${e.message}"  // Explicitly fail if Kubernetes deployment fails
+                        error "Terraform execution failed: ${e.message}"  // Explicitly fail if Terraform execution fails
                     }
                 }
             }
