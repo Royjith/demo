@@ -8,7 +8,7 @@ pipeline {
         DOCKER_HUB_CREDENTIALS_ID = 'dockerhub'  // Docker Hub credentials ID
         DEPLOYMENT_NAME = 'pipeline-deployment'
         NAMESPACE = 'default'  // Kubernetes namespace to deploy to
-        TERRAFORM_DIR = 'terraform'  // Directory where your Terraform code is located
+        TERRAFORM_DIR = 'main.tf'  // Directory where your Terraform code is located
     }
 
     stages {
