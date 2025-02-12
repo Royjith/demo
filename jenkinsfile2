@@ -9,8 +9,6 @@ pipeline {
         DEPLOYMENT_NAME = 'pipeline-deployment'
         NAMESPACE = 'default'  // Kubernetes namespace to deploy to
         TERRAFORM_DIR = 'terraform'  // Directory where your Terraform code is located
-        AWS_ACCESS_KEY_ID = "rrr"
-        AWS_SECRET_ACCESS_KEY = "7RZz"
     }
 
     stages {
@@ -87,7 +85,7 @@ pipeline {
 
                     try {
                         // Set up Terraform credentials (ensure you have the necessary credentials in Jenkins)
-                        withCredentials([file(credentialsId: 'aws-credentials', variable: 'AWS_CREDENTIALS')]) {
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-id']]) {
                             // Navigate to the Terraform directory
                             dir(TERRAFORM_DIR) {
                                 // Initialize Terraform
