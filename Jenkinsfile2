@@ -37,7 +37,7 @@ pipeline {
                         """
 
                         // Build the Docker image with the specified Dockerfile and no cache to avoid old layers
-                        sh "docker build -f Dockerfile --no-cache -t ${DOCKER_HUB_REPO}:${tag} ."
+                        sh "docker build -f Dockerfile2 --no-cache -t ${DOCKER_HUB_REPO}:${tag} ."
 
                         echo "Docker image built successfully: ${DOCKER_HUB_REPO}:${tag}"
 
