@@ -6,9 +6,9 @@ pipeline {
         DOCKER_TAG = 'version-1'            // Docker tag
         DOCKER_HUB_REPO = 'royjith/pikube'   // Docker Hub repository
         DOCKER_HUB_CREDENTIALS_ID = 'dockerhub'  // Docker Hub credentials ID
-        DEPLOYMENT_NAME = 'pipeline-deployment'
-        NAMESPACE = 'default'  // Kubernetes namespace to deploy to
-        TERRAFORM_DIR = '.'  // Use the current directory as it will be where the 'main.tf' is located after checkout
+       // DEPLOYMENT_NAME = 'pipeline-deployment'
+       // NAMESPACE = 'default'  // Kubernetes namespace to deploy to
+       // TERRAFORM_DIR = '.'  // Use the current directory as it will be where the 'main.tf' is located after checkout
     }
 
     stages {
@@ -26,11 +26,23 @@ pipeline {
                     // Set default tag to 'latest' if DOCKER_TAG is not defined
                     def tag = "${DOCKER_TAG ?: 'version-1'}"
                     echo "Building Docker image with tag: ${tag}..."
-                    // Build the Docker image with the determined tag
-                    def buildResult = sh(script: "docker build -t ${DOCKER_HUB_REPO}:${tag} .", returnStatus: true)
-            
-                    if (buildResult != 0) {
-                        error 'Docker build failed!'  // Explicitly fail if Docker build fails
+
+                    // Ensure the Docker image build context is fresh
+                    // (pull the latest code and clean up workspace if needed)
+                    try {
+                        // Optional: Clean up any existing images with the same name to prevent issues
+                        sh """
+                            docker rmi -f ${DOCKER_HUB_REPO}:${tag} || true
+                            docker system prune -f
+                        """
+
+                        // Build the Docker image with the specified Dockerfile and no cache to avoid old layers
+                        sh "docker build -f Dockerfile --no-cache -t ${DOCKER_HUB_REPO}:${tag} ."
+
+                        echo "Docker image built successfully: ${DOCKER_HUB_REPO}:${tag}"
+
+                    } catch (Exception e) {
+                        error "Docker build failed: ${e.message}"  // Explicitly fail if Docker build fails
                     }
                 }
             }
