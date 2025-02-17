@@ -78,31 +78,7 @@ pipeline {
             }
         }
 
-        stage('Run Terraform for EC2 and Docker Setup') {
-            steps {
-                input message: 'Approve Terraform Execution?', ok: 'Deploy'  // Manual approval before running Terraform
-                script {
-                    echo 'Running Terraform to launch EC2 instance and set up Docker...'
-
-                    try {
-                        // Set up Terraform credentials (ensure you have the necessary credentials in Jenkins)
-                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-id']]) {
-                            // Initialize Terraform and apply the configuration from the 'main.tf' file in the checked-out repository
-                            // Navigate to the directory where 'main.tf' is located (current directory after checkout)
-                            dir('.') {
-                                // Initialize Terraform
-                                sh 'terraform init'
-
-                                // Apply Terraform configuration to create EC2 instance and set up Docker
-                                sh 'terraform apply -auto-approve'
-                            }
-                        }
-                    } catch (Exception e) {
-                        error "Terraform execution failed: ${e.message}"  // Explicitly fail if Terraform execution fails
-                    }
-                }
-            }
-        }
+        
     }
 
     post {
