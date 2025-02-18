@@ -18,26 +18,31 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            steps {
-                script {
-                    // Use the static Docker tag "version-1"
-                    def tag = "${DOCKER_TAG}"
-                    echo "Building Docker image with tag: ${tag}..."
+    steps {
+        script {
+            // Use the static Docker tag "version-1"
+            def tag = "${DOCKER_TAG}"
+            echo "Building Docker image with tag: ${tag}..."
 
-                    try {
-                        // Clean up any existing images with the same name to prevent issues
-                        sh """
-                            docker rmi -f ${DOCKER_HUB_REPO}:${tag} || true
-                            docker system prune -f
-                        """
+            try {
+                // Clean up any existing images with the same name to prevent issues
+                sh """
+                    docker rmi -f ${DOCKER_HUB_REPO}:${tag} || true
+                    docker system prune -f
+                """
 
-                        // Build the Docker image with the specified Dockerfile and no cache to avoid old layers
-                        sh "docker build -f Dockerfile2 --no-cache -t ${DOCKER_HUB_REPO}:${tag} ."
+                // Build the Docker image without tagging
+                echo "Building the Docker image from Dockerfile2..."
+                sh "docker build -f Dockerfile2 --no-cache ."
 
-                        echo "Docker image built successfully: ${DOCKER_HUB_REPO}:${tag}"
+                // Tag the image with the appropriate repository and tag
+                echo "Tagging the Docker image with tag: ${DOCKER_HUB_REPO}:${tag}..."
+                sh "docker tag $(docker images -q ${DOCKER_IMAGE}:latest) ${DOCKER_HUB_REPO}:${tag}"
 
-                    } catch (Exception e) {
-                        error "Docker build failed: ${e.message}"  // Explicitly fail if Docker build fails
+                echo "Docker image built and tagged successfully: ${DOCKER_HUB_REPO}:${tag}"
+
+            } catch (Exception e) {
+                error "Docker build failed: ${e.message}"  // Explicitly fail if Docker build fails
                     }
                 }
             }
