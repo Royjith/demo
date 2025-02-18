@@ -35,7 +35,7 @@ pipeline {
 
                         // Build the Docker image and tag it as "latest"
                         echo "Building the Docker image from Dockerfile2..."
-                        sh "docker build -f Dockerfile2 --no-cache -t ${DOCKER_HUB_REPO}:latest ."
+                        sh "docker build -f Dockerfile --no-cache -t ${DOCKER_HUB_REPO}:latest ."
 
                         // Tag the image with the appropriate repository and tag
                         echo "Tagging the Docker image with tag: ${DOCKER_HUB_REPO}:${tag}..."
