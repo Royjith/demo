@@ -37,7 +37,10 @@ pipeline {
 
                 // Tag the image with the appropriate repository and tag
                 echo "Tagging the Docker image with tag: ${DOCKER_HUB_REPO}:${tag}..."
-                sh "docker tag $(docker images -q ${DOCKER_IMAGE}:latest) ${DOCKER_HUB_REPO}:${tag}"
+                sh """
+                    IMAGE_ID=\$(docker images -q ${DOCKER_IMAGE}:latest)
+                    docker tag \$IMAGE_ID ${DOCKER_HUB_REPO}:${tag}
+                """
 
                 echo "Docker image built and tagged successfully: ${DOCKER_HUB_REPO}:${tag}"
 
